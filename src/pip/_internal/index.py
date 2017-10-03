@@ -56,6 +56,8 @@ SECURE_ORIGINS = [
 
 logger = logging.getLogger(__name__)
 
+blacklisted_hosts = set()
+
 
 class InstallationCandidate(object):
 
@@ -802,6 +804,11 @@ class HTMLPage(object):
                 url = urllib_parse.urljoin(url, 'index.html')
                 logger.debug(' file: URL is directory, getting %s', url)
 
+            if blacklisted_hosts and scheme != 'file':
+                if urllib_parse.urlparse(url).netloc in blacklisted_hosts:
+                    logger.debug('host is blacklisted %s', url)
+                    return
+
             resp = session.get(
                 url,
                 headers={
@@ -833,6 +840,15 @@ class HTMLPage(object):
                       "%s" % exc)
             cls._handle_fail(link, reason, url, meth=logger.info)
         except requests.ConnectionError as exc:
+            # blacklist this host for future packages
+            host = urllib_parse.urlparse(url).netloc
+            blacklisted_hosts.add(host)
+            cls._handle_fail(
+                link,
+                "connection error for %s" % host,
+                url,
+                meth=logger.warning
+            )
             cls._handle_fail(link, "connection error: %s" % exc, url)
         except requests.Timeout:
             cls._handle_fail(link, "timed out", url)
