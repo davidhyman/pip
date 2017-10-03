@@ -30,6 +30,7 @@ tests_require = [
     'pytest',
     'mock',
     'pretend',
+    'pyyaml',
     'scripttest>=1.3',
     'virtualenv>=1.10',
     'freezegun',
