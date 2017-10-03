@@ -183,6 +183,16 @@ timeout = partial(
     help='Set the socket timeout (default %default seconds).',
 )  # type: Any
 
+connect_timeout = partial(
+    Option,
+    '--timeout-connect',
+    metavar='sec',
+    dest='connect_timeout',
+    type='float',
+    default=15,
+    help='Set the socket connection timeout (default %default seconds).',
+)  # type: Any
+
 skip_requirements_regex = partial(
     Option,
     # A regex to be used to skip requirements
@@ -558,6 +568,7 @@ general_group = {
         proxy,
         retries,
         timeout,
+        connect_timeout,
         skip_requirements_regex,
         exists_action,
         trusted_host,

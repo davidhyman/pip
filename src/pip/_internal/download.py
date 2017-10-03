@@ -323,6 +323,7 @@ class InsecureHTTPAdapter(HTTPAdapter):
 class PipSession(requests.Session):
 
     timeout = None
+    connect_timeout = None
 
     def __init__(self, *args, **kwargs):
         retries = kwargs.pop("retries", 0)
@@ -386,7 +387,7 @@ class PipSession(requests.Session):
 
     def request(self, method, url, *args, **kwargs):
         # Allow setting a default timeout on a session
-        kwargs.setdefault("timeout", self.timeout)
+        kwargs.setdefault("timeout", (self.connect_timeout, self.timeout))
 
         # Dispatch the actual request
         return super(PipSession, self).request(method, url, *args, **kwargs)

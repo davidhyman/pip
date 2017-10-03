@@ -95,6 +95,9 @@ class Command(object):
                 timeout if timeout is not None else options.timeout
             )
 
+        if options.connect_timeout is not None:
+            session.connect_timeout = options.connect_timeout
+
         # Handle configured proxies
         if options.proxy:
             session.proxies = {
