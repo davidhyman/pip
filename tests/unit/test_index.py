@@ -6,7 +6,6 @@ import pytest
 from pip._internal.download import PipSession
 from pip._internal.index import HTMLPage, Link, PackageFinder
 from pip._vendor.requests.exceptions import InvalidSchema
-from pip._internal.index import blacklisted_hosts
 
 
 def test_sort_locations_file_expand_dir(data):
@@ -116,42 +115,42 @@ def test_base_url(html, url, expected):
 
 class TestHTMLGetPage(object):
     def test_invalid_schema(self):
+        # we still raise invalid schemas
+        session = PipSession()
         with pytest.raises(InvalidSchema):
             HTMLPage.get_page(
                 link=Link('htt://yo/bad_url_schema'),
-                session=PipSession()
+                session=session
             )
-        assert blacklisted_hosts == set()
+        assert session.blacklisted_hosts == set()
 
     def test_invalid_url(self):
+        # we skip hosts that have connection problems
         session = PipSession()
         with mock.patch.object(session, 'get', wraps=session.get) as get_tracker:
-            try:
-                result = HTMLPage.get_page(
-                    link=Link('http://yo/bad_url_connection'),
-                    session=session
-                )
-                assert result is None
-                assert get_tracker.call_count == 1
-                assert blacklisted_hosts == {'yo'}
+            result = HTMLPage.get_page(
+                link=Link('http://yo/bad_url_connection'),
+                session=session
+            )
+            assert result is None
+            assert get_tracker.call_count == 1
+            assert session.blacklisted_hosts == {'yo'}
 
-                result = HTMLPage.get_page(
-                    link=Link('http://yo/bad_url_connection'),
-                    session=session
-                )
-                assert result is None
-                assert get_tracker.call_count == 1
-                assert blacklisted_hosts == {'yo'}
+            result = HTMLPage.get_page(
+                link=Link('http://yo/bad_url_connection'),
+                session=session
+            )
+            assert result is None
+            assert get_tracker.call_count == 1
+            assert session.blacklisted_hosts == {'yo'}
 
-                result = HTMLPage.get_page(
-                    link=Link('http://oy/bad_url_connection'),
-                    session=session
-                )
-                assert result is None
-                assert get_tracker.call_count == 2
-                assert blacklisted_hosts == {'yo', 'oy'}
-            finally:
-                blacklisted_hosts.clear()
+            result = HTMLPage.get_page(
+                link=Link('http://oy/bad_url_connection'),
+                session=session
+            )
+            assert result is None
+            assert get_tracker.call_count == 2
+            assert session.blacklisted_hosts == {'yo', 'oy'}
 
 
 class MockLogger(object):

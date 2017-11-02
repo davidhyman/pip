@@ -329,6 +329,9 @@ class PipSession(requests.Session):
         cache = kwargs.pop("cache", None)
         insecure_hosts = kwargs.pop("insecure_hosts", [])
 
+        # hosts we will no longer use in this session
+        self.blacklisted_hosts = kwargs.pop("blacklisted_hosts", set())
+
         super(PipSession, self).__init__(*args, **kwargs)
 
         # Attach our User Agent to the request
