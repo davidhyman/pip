@@ -125,7 +125,8 @@ class TestHTMLGetPage(object):
         assert session.blacklisted_hosts == set()
 
     def test_invalid_url(self):
-        # we skip hosts that have connection problems
+        # check we skip hosts that have connection problems
+        # 0.0.0.0 is used in this test as an unconnectable host
         session = PipSession()
         with mock.patch.object(
             session,
@@ -133,28 +134,29 @@ class TestHTMLGetPage(object):
             wraps=session.get,
         ) as get_tracker:
             result = HTMLPage.get_page(
-                link=Link('http://yo/bad_url_connection'),
+                link=Link('http://0.0.0.0/bad_url_connection'),
                 session=session
             )
             assert result is None
             assert get_tracker.call_count == 1
-            assert session.blacklisted_hosts == {'yo'}
+            assert session.blacklisted_hosts == {'0.0.0.0'}
 
+            # sequentially, a second call to the same host
             result = HTMLPage.get_page(
-                link=Link('http://yo/bad_url_connection'),
+                link=Link('http://0.0.0.0/bad_url_connection'),
                 session=session
             )
             assert result is None
             assert get_tracker.call_count == 1
-            assert session.blacklisted_hosts == {'yo'}
+            assert session.blacklisted_hosts == {'0.0.0.0'}
 
             result = HTMLPage.get_page(
-                link=Link('http://oy/bad_url_connection'),
+                link=Link('http://0.0.0.1/bad_url_connection'),
                 session=session
             )
             assert result is None
             assert get_tracker.call_count == 2
-            assert session.blacklisted_hosts == {'yo', 'oy'}
+            assert session.blacklisted_hosts == {'0.0.0.0', '0.0.0.1'}
 
 
 class MockLogger(object):
