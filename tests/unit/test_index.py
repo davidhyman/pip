@@ -127,7 +127,11 @@ class TestHTMLGetPage(object):
     def test_invalid_url(self):
         # we skip hosts that have connection problems
         session = PipSession()
-        with mock.patch.object(session, 'get', wraps=session.get) as get_tracker:
+        with mock.patch.object(
+            session,
+            'get',
+            wraps=session.get,
+        ) as get_tracker:
             result = HTMLPage.get_page(
                 link=Link('http://yo/bad_url_connection'),
                 session=session
