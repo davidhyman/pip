@@ -56,6 +56,7 @@ SECURE_ORIGINS = [
 
 logger = logging.getLogger(__name__)
 
+# index hosts we will no longer use in this session
 blacklisted_hosts = set()
 
 
@@ -804,10 +805,13 @@ class HTMLPage(object):
                 url = urllib_parse.urljoin(url, 'index.html')
                 logger.debug(' file: URL is directory, getting %s', url)
 
-            if blacklisted_hosts and scheme != 'file':
-                if urllib_parse.urlparse(url).netloc in blacklisted_hosts:
-                    logger.debug('host is blacklisted %s', url)
-                    return
+            if scheme != 'file' and netloc in blacklisted_hosts:
+                logger.debug(
+                    'Skipping page %s because host %s is blacklisted',
+                    link,
+                    netloc,
+                )
+                return
 
             resp = session.get(
                 url,
@@ -840,16 +844,16 @@ class HTMLPage(object):
                       "%s" % exc)
             cls._handle_fail(link, reason, url, meth=logger.info)
         except requests.ConnectionError as exc:
-            # blacklist this host for future packages
-            host = urllib_parse.urlparse(url).netloc
-            blacklisted_hosts.add(host)
+            # blacklist this host for future packages, notify the user
+            # and log the cause
+            blacklisted_hosts.add(netloc)
             cls._handle_fail(
                 link,
-                "connection error for %s" % host,
+                "connection error for %s" % netloc,
                 url,
-                meth=logger.warning
+                meth=logger.warning,
             )
-            cls._handle_fail(link, "connection error: %s" % exc, url)
+            logging.debug("Connection error for %s: %s" % (link, exc))
         except requests.Timeout:
             cls._handle_fail(link, "timed out", url)
         else:
