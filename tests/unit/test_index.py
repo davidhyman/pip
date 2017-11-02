@@ -1,9 +1,12 @@
 import os.path
 
+import mock
 import pytest
 
 from pip._internal.download import PipSession
 from pip._internal.index import HTMLPage, Link, PackageFinder
+from pip._vendor.requests.exceptions import InvalidSchema
+from pip._internal.index import blacklisted_hosts
 
 
 def test_sort_locations_file_expand_dir(data):
@@ -109,6 +112,46 @@ class TestLink(object):
 )
 def test_base_url(html, url, expected):
     assert HTMLPage(html, url).base_url == expected
+
+
+class TestHTMLGetPage(object):
+    def test_invalid_schema(self):
+        with pytest.raises(InvalidSchema):
+            HTMLPage.get_page(
+                link=Link('htt://yo/bad_url_schema'),
+                session=PipSession()
+            )
+        assert blacklisted_hosts == set()
+
+    def test_invalid_url(self):
+        session = PipSession()
+        with mock.patch.object(session, 'get', wraps=session.get) as get_tracker:
+            try:
+                result = HTMLPage.get_page(
+                    link=Link('http://yo/bad_url_connection'),
+                    session=session
+                )
+                assert result is None
+                assert get_tracker.call_count == 1
+                assert blacklisted_hosts == {'yo'}
+
+                result = HTMLPage.get_page(
+                    link=Link('http://yo/bad_url_connection'),
+                    session=session
+                )
+                assert result is None
+                assert get_tracker.call_count == 1
+                assert blacklisted_hosts == {'yo'}
+
+                result = HTMLPage.get_page(
+                    link=Link('http://oy/bad_url_connection'),
+                    session=session
+                )
+                assert result is None
+                assert get_tracker.call_count == 2
+                assert blacklisted_hosts == {'yo', 'oy'}
+            finally:
+                blacklisted_hosts.clear()
 
 
 class MockLogger(object):
