@@ -2,10 +2,10 @@ import os.path
 
 import mock
 import pytest
+from pip._vendor.requests.exceptions import InvalidSchema
 
 from pip._internal.download import PipSession
 from pip._internal.index import HTMLPage, Link, PackageFinder
-from pip._vendor.requests.exceptions import InvalidSchema
 
 
 def test_sort_locations_file_expand_dir(data):
