@@ -804,7 +804,7 @@ class HTMLPage(object):
 
             if scheme != 'file' and netloc in session.blacklisted_hosts:
                 logger.debug(
-                    'Skipping page %s because host %s is blacklisted',
+                    'Skipping page %s because host %s is ignored due to a connection error',
                     link,
                     netloc,
                 )
