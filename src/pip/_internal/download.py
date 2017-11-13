@@ -329,8 +329,8 @@ class PipSession(requests.Session):
         cache = kwargs.pop("cache", None)
         insecure_hosts = kwargs.pop("insecure_hosts", [])
 
-        # hosts we will no longer use in this session
-        self.blacklisted_hosts = kwargs.pop("blacklisted_hosts", set())
+        # hosts we will not use in this session (shallow copy if provided).
+        self.blacklisted_hosts = set(kwargs.pop("blacklisted_hosts", ()))
 
         super(PipSession, self).__init__(*args, **kwargs)
 
@@ -395,6 +395,14 @@ class PipSession(requests.Session):
 
         # Dispatch the actual request
         return super(PipSession, self).request(method, url, *args, **kwargs)
+
+    def add_host_to_blacklist(self, host):
+        """Adds a host to the session blacklist"""
+        self.blacklisted_hosts.add(host)
+
+    def is_host_blacklisted(self, host):
+        """Checks if a host is contained in the session blacklist"""
+        return host in self.blacklisted_hosts
 
 
 def get_file_content(url, comes_from=None, session=None):

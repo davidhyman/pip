@@ -329,6 +329,23 @@ class TestPipSession:
 
         assert not hasattr(session.adapters["https://example.com/"], "cache")
 
+    def test_blacklist_empty(self):
+        session = PipSession()
+        assert not session.is_host_blacklisted('http://yo')
+
+    def test_blacklist_retrieve(self):
+        session = PipSession()
+        session.add_host_to_blacklist('http://yo')
+        assert session.is_host_blacklisted('http://yo')
+        assert not session.is_host_blacklisted('http://oy')
+
+    def test_blacklist_retrieve_parameter(self):
+        external = ['http://yo']
+        session = PipSession(blacklisted_hosts=external)
+        external[:] = []
+        assert session.is_host_blacklisted('http://yo')
+        assert not session.is_host_blacklisted('http://oy')
+
 
 def test_parse_credentials():
     auth = MultiDomainBasicAuth()

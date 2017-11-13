@@ -802,7 +802,7 @@ class HTMLPage(object):
                 url = urllib_parse.urljoin(url, 'index.html')
                 logger.debug(' file: URL is directory, getting %s', url)
 
-            if scheme != 'file' and netloc in session.blacklisted_hosts:
+            if scheme != 'file' and session.is_host_blacklisted(host=netloc):
                 logger.debug(
                     'Skipping page %s because host %s is ignored due to a connection error',
                     link,
@@ -843,7 +843,7 @@ class HTMLPage(object):
         except requests.ConnectionError as exc:
             # blacklist this host for future packages, notify the user
             # and log the cause
-            session.blacklisted_hosts.add(netloc)
+            session.add_host_to_blacklist(host=netloc)
             cls._handle_fail(
                 link,
                 "connection error for %s" % netloc,
